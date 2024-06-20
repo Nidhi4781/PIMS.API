@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc.Versioning;
+using Microsoft.Extensions.Logging;
 using PIMS.allsoft.Controllers;
 using PIMS.allsoft.Exceptions;
 using System.Net;
@@ -14,8 +15,8 @@ namespace PIMS.allsoft.Configurations;
 public class GlobalExceptionHandelingMiddleware
 {
     private readonly RequestDelegate _next;
-    private readonly ILogger<AuthController> _logger;
-    public GlobalExceptionHandelingMiddleware(RequestDelegate next, ILogger<AuthController> logger)
+    private readonly ILogger<GlobalExceptionHandelingMiddleware> _logger;
+    public GlobalExceptionHandelingMiddleware(RequestDelegate next, ILogger<GlobalExceptionHandelingMiddleware> logger)
     {
         _next = next;
         _logger = logger;
@@ -25,12 +26,12 @@ public class GlobalExceptionHandelingMiddleware
     {
         try
         {
-            _logger.LogInformation("GET request received",context);
+            _logger.LogInformation("GET request received", context);
             await _next(context);
         }
         catch (Exception e)
         {
-            _logger.LogError("Error",e);
+            _logger.LogError(e, "Error");
             await HandleExceptionAsync(context, e);
         }
     }

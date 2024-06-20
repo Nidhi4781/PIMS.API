@@ -10,6 +10,7 @@ using PIMS.allsoft.Context;
 using PIMS.allsoft.Interfaces;
 using PIMS.allsoft.Services;
 using Serilog;
+using Serilog.Exceptions;
 using System.Text;
 try
 {
@@ -18,6 +19,7 @@ try
                       .Build();
     Log.Logger = new LoggerConfiguration()
         .ReadFrom.Configuration(configuration)
+        .Enrich.WithExceptionDetails()
        .CreateLogger();
 
     Log.Logger.Information("Logging is working fine");
