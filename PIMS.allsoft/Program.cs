@@ -11,6 +11,7 @@ using PIMS.allsoft.Interfaces;
 using PIMS.allsoft.Services;
 using Serilog;
 using Serilog.Exceptions;
+using System.Reflection;
 using System.Text;
 try
 {
@@ -60,9 +61,18 @@ try
 
     // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
     builder.Services.AddEndpointsApiExplorer();
-    builder.Services.AddSwaggerGen(opt =>
+    builder.Services.AddSwaggerGen(opt => // Specify the MIME types that the API can consume
     {
-        opt.SwaggerDoc("v1", new OpenApiInfo { Title = "MyAPI", Version = "v1" });
+        var xmlFile = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
+        var xmlPath = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), xmlFile);
+        opt.IncludeXmlComments(xmlPath);
+
+        opt.SwaggerDoc("v1", new OpenApiInfo
+        {
+            Title = "MyAPI",
+            Description= "Product Inventory Management System using .NET Core for the backend, SQL Server for persistent storage, and expose functionality through a secure, versioned RESTful Web API. This system will not only manage product and inventory records but also include user authentication, role-based access control, and logging !",
+            Version = "v1"
+        });
         opt.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
         {
             In = ParameterLocation.Header,
@@ -112,8 +122,18 @@ try
     // Configure the HTTP request pipeline.
     if (app.Environment.IsDevelopment())
     {
+        // Enable middleware to serve generated Swagger as a JSON endpoint.
         app.UseSwagger();
-        app.UseSwaggerUI();
+        // Enable middleware to serve swagger-ui (HTML, JS, CSS, etc.)
+        app.UseSwaggerUI(c => // UseSwaggerUI Protected by if (env.IsDevelopment())
+        {
+            c.SwaggerEndpoint("/swagger/v1/swagger.json", "My API V1"); //This is default selected
+                                                                        //c.SwaggerEndpoint("/swagger/v1.1/swagger.json", "V1.1"); //for swagger versioning
+                                                                        //c.SwaggerEndpoint("/swagger/v1.2/swagger.json", "V1.2");
+                                                                        //c.SupportedSubmitMethods(); // by using this  remove "try it now option"
+                                                                        // c.RoutePrefix = string.Empty; // Set Swagger UI at the root   ex:- Access Swagger UI at: https://localhost:7123/
+            c.RoutePrefix = "swagger"; // Serve Swagger UI at /swagger ex:- Access Swagger UI at: https://localhost:7123/swagger
+        });
     }
     app.AddGlobalErrorHandeler();
     //app.UseSession();
