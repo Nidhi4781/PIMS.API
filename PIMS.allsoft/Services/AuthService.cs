@@ -7,6 +7,7 @@ using System.Security.Claims;
 using System.Text;
 using PIMS.allsoft.Exceptions;
 using Microsoft.AspNetCore.Http;
+using Microsoft.EntityFrameworkCore;
 
 namespace PIMS.allsoft.Services
 {
@@ -22,19 +23,30 @@ namespace PIMS.allsoft.Services
             _configuration = configuration;
             _passwordHasher = passwordHasher;
         }
-
-        public Role AddRole(Role role)
+        public async Task<Role> AddRoleAsync(Role role)
         {
-            var addedRole = _context.Roles.Add(role);
-            _context.SaveChanges();
+            var roleExists = await _context.Roles.AnyAsync(r => r.RoleName == role.RoleName);
+            if (roleExists)
+                throw new Exception($"Role with RoleName {role.RoleName} already exists");
+
+            var addedRole = await _context.Roles.AddAsync(role);
+            await _context.SaveChangesAsync();
             return addedRole.Entity;
         }
 
-        public User AddUser(User user)
+        public async Task<User> AddUserAsync(User user)
         {
+            // Check if the username already exists
+            var existingUser = await _context.Users.SingleOrDefaultAsync(u => u.Username == user.Username);
+            if (existingUser != null)
+            {
+                throw new Exception($"Username {user.Username} is already taken.");
+            }
+            // Hash the password
             user.Password = _passwordHasher.Hash(user.Password);
-            //  user.Password= HashPassword(user.Password);
-            var addedUser = _context.Users.Add(user);
+
+            // Add the user to the database
+            var addedUser = await _context.Users.AddAsync(user);
             _context.SaveChanges();
             return addedUser.Entity;
         }
@@ -44,29 +56,32 @@ namespace PIMS.allsoft.Services
         //    throw new NotImplementedException();
         //}
 
-        public bool AssignRoleToUser(AddUserRole obj)
+        public async Task<bool> AssignRoleToUserAsync(AddUserRole obj)
         {
-            try
-            {
+            
                 var addRoles = new List<UserRole>();
-                var user = _context.Users.SingleOrDefault(s => s.UserID == obj.UserId);
+                var user = await _context.Users.SingleOrDefaultAsync(s => s.UserID == obj.UserId);
                 if (user == null)
                     throw new Exception("user is not valid");
                 foreach (int role in obj.RoleIds)
                 {
-                    var userRole = new UserRole();
+                var roleExists = await _context.Roles.AnyAsync(r => r.RoleID == role);
+                if (!roleExists)
+                    throw new Exception($"Role ID {role} is not valid");
+
+                var userRoleExists = await _context.UserRoles.AnyAsync(ur => ur.UserId == user.UserID && ur.RoleId == role);
+                if (userRoleExists)
+                    throw new Exception($"User {user.UserID} is already assigned to role {role}");
+
+                var userRole = new UserRole();
                     userRole.RoleId = role;
-                    userRole.UserId = user.UserID;
+                   // userRole.UserId = user.UserID;
                     addRoles.Add(userRole);
                 }
-                _context.UserRoles.AddRange(addRoles);
-                _context.SaveChanges();
+                await _context.UserRoles.AddRangeAsync(addRoles);
+                await _context.SaveChangesAsync();
                 return true;
-            }
-            catch (Exception ex)
-            {
-                return false;
-            }
+           
 
         }
 
@@ -117,5 +132,7 @@ namespace PIMS.allsoft.Services
                 throw new Exception("credentials are not valid");
             }
         }
+
+      
     }
 }

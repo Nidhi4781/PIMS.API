@@ -4,10 +4,10 @@ namespace PIMS.allsoft.Interfaces
 {
     public interface IAuthService
     {
-        User AddUser(User user);
+        Task<User> AddUserAsync(User user);
         string Login(LoginRequest loginRequest);
-        Role AddRole(Role role);
-        bool AssignRoleToUser(AddUserRole obj);
+        Task<Role> AddRoleAsync(Role role);
+        Task<bool> AssignRoleToUserAsync(AddUserRole obj);
 
     }
 }
