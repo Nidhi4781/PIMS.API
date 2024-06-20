@@ -104,7 +104,7 @@ try
         options.SubstituteApiVersionInUrl = true;
     });
     builder.Services.AddMemoryCache();
-    builder.Services.AddSession(options => { options.IdleTimeout = TimeSpan.FromMinutes(240); });
+    // builder.Services.AddSession(options => { options.IdleTimeout = TimeSpan.FromMinutes(240); });
     var app = builder.Build();
 
     // Configure the HTTP request pipeline.
@@ -114,7 +114,7 @@ try
         app.UseSwaggerUI();
     }
     app.AddGlobalErrorHandeler();
-    app.UseSession();
+    //app.UseSession();
     app.UseHttpsRedirection();
     app.UseAuthentication();
 
