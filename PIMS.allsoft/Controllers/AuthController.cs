@@ -59,8 +59,21 @@ namespace PIMS.allsoft.Controllers
         public IActionResult Login([FromBody] LoginRequest obj)
         {
             var token = _auth.Login(obj);
-            //  return Ok(token);           
-            return new JsonResult(token);
+            if (token != null)
+            {
+                return new JsonResult(new { token = token })
+                {
+                    StatusCode = 200 // Set the StatusCode explicitly
+                };
+            }
+            else
+            {
+                return new JsonResult(new { message = "Invalid login attempt" })
+                {
+                    StatusCode = 401 // Unauthorized status code for failed login
+                };
+            }
+           // return new JsonResult(token);
         }
         /// <summary>
         /// Assign roles to a user.
@@ -209,6 +222,10 @@ namespace PIMS.allsoft.Controllers
                 return BadRequest(ex.Message);
             }
         }
-
+        public string Index()
+        {
+            var DATA = "HELLO";
+            return DATA;
+        }
     }
 }
