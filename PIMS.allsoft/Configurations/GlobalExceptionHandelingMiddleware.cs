@@ -77,52 +77,14 @@ public class GlobalExceptionHandelingMiddleware
                 break;
         }
 
-        //if (exceptionType == typeof(BadRequestException))
-        //{
-        //    message = e.Message;
-        //    status = HttpStatusCode.BadRequest;
-        //    StackTrace = e.StackTrace;
-        //}
-        //else if (exceptionType == typeof(NotFoundException))
-        //{
-        //    message = e.Message;
-        //    status = HttpStatusCode.NotFound;
-        //    StackTrace = e.StackTrace;
-        //}
-        //else if (exceptionType == typeof(NotImplementedException))
-        //{
-        //    message = e.Message;
-        //    status = HttpStatusCode.NotImplemented;
-        //    StackTrace = e.StackTrace;
-        //}
-        //else if (exceptionType == typeof(KeyNotFoundException))
-        //{
-        //    message = e.Message;
-        //    status = HttpStatusCode.NotFound;
-        //    StackTrace = e.StackTrace;
-        //}
-        //else if (exceptionType == typeof(UnauthorizedAccessException))
-        //{
-        //    message = e.Message;
-        //    status = HttpStatusCode.Unauthorized;
-        //    StackTrace = e.StackTrace;
-        //}
-        //else
-        //{
-        //    message = e.Message;
-        //    status = HttpStatusCode.InternalServerError;
-        //    StackTrace = e.StackTrace;
-        //}
-
         var exceptionResult = JsonSerializer.Serialize(new
         {
             status = statusCode,
             message = message
         });
-         
         context.Response.ContentType = "application/json";
         context.Response.StatusCode = statusCode;
-        return context.Response.WriteAsJsonAsync(exceptionResult);
+        return context.Response.WriteAsync(exceptionResult);
     }
 }
 

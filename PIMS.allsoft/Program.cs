@@ -13,6 +13,8 @@ using Serilog;
 using Serilog.Exceptions;
 using System.Reflection;
 using System.Text;
+using System.Text.Json;
+
 try
 {
     var configuration = new ConfigurationBuilder()
@@ -50,6 +52,26 @@ try
             ValidIssuer = builder.Configuration["Jwt:Issuer"],
             IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"]))
         };
+        options.Events = new JwtBearerEvents
+        {
+            OnChallenge = context =>
+            {
+                // Skip the default logic.
+                context.HandleResponse();
+
+                var result = JsonSerializer.Serialize(new { status = 401, message = "Unauthorized access." });
+                context.Response.ContentType = "application/json";
+                context.Response.StatusCode = 401;
+                return context.Response.WriteAsync(result);
+            },
+            OnForbidden = context =>
+            {
+                var result = JsonSerializer.Serialize(new { status = 403, message = "Forbidden. You do not have permission to access this resource." });
+                context.Response.ContentType = "application/json";
+                context.Response.StatusCode = 403;
+                return context.Response.WriteAsync(result);
+            }
+        };
     });
     builder.Services.AddAuthorization(options =>
     {
@@ -58,8 +80,6 @@ try
                 .RequireAuthenticatedUser()
                 .Build();
     });
-
-    // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
     builder.Services.AddEndpointsApiExplorer();
     builder.Services.AddSwaggerGen(opt => // Specify the MIME types that the API can consume
     {
